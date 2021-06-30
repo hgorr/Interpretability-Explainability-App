@@ -8,6 +8,8 @@ classdef View < handle
         hPIList                 = ["Predictor_Importance", "OOB_Permuted", "MRMR", "NCA"]
         hRowColorTable          = [1 1 0];
         hVariableToPredictLabel = "Variable to predict:"
+        hUITableModelsClass     = containers.Map(["Name", "Type", "Data", "Accuracy_Training", "Accuracy_Testing"], ...
+                                                ["string", "string", "string", "double", "double"]);
     end
     
     events
@@ -23,6 +25,7 @@ classdef View < handle
             hDeepLearningMenu
             hDataTable        
             hDataButtonGroup
+            hUITableModels
             
             % Global
             % PDP/ICE
@@ -71,7 +74,7 @@ classdef View < handle
        hQueryPoint              {mustBeA(hQueryPoint, ["double", "table"])} = double.empty()
     end
 
-    properties (SetObservable = true, Access = {?Callbacks})
+    properties (SetObservable = true, Access = {?mvc.Callbacks})
         app_
         model_
         currentData_
@@ -85,7 +88,7 @@ classdef View < handle
         function obj = View(options)
             arguments
                 options.app   (1,1) 
-                options.model (0,1) {mustBeA(options.model,  "Model")} = Model.empty()      
+                options.model (0,1) {mustBeA(options.model,  "mvc.Model")} = mvc.Model.empty()      
             end           
             obj.app_   = options.app;
             obj.initializeListeners()
@@ -97,7 +100,7 @@ classdef View < handle
         end
     end
     
-    methods (Access = {?Callbacks})
+    methods (Access = {?mvc.Callbacks})
         
         % Add listeners
         function initializeListeners(obj)
@@ -143,6 +146,8 @@ classdef View < handle
             obj.hDataTableLocal.ColumnName      = obj.currentData_.Properties.VariableNames;
             obj.hPredictorsSlider.Limits        = [1 numel(obj.currentData_.Properties.VariableNames)-1];
             obj.hPredictorsSlider.MajorTicks    = 1:1:numel(obj.currentData_.Properties.VariableNames)-1;
+            obj.hUITableModels                  = cell2table({'Model_Name', 'Model_Type', 'Data_Type', 0, 0}, ...
+                                                              'VariableNames', obj.hUITableModels.ColumnName);
         end
         
     end
@@ -225,6 +230,9 @@ classdef View < handle
         function v = get.Pointer(obj)
             v = obj.app_.UIFigure.Pointer;
         end
+        function v = get.hUITableModels(obj)
+            v = obj.app_.UITableModels;
+        end
     end
     
     %% MUTATORS
@@ -233,15 +241,39 @@ classdef View < handle
             obj.model_                              = m;
             obj.iscompatible_                       = obj.isCompatible();
             obj.app_.VariabletopredictLabel.Text    = obj.hVariableToPredictLabel + " " + m.VariableToExplain;
+            s                                       = fromModel2RowTable(m);
+            newData                                 = [oldData; fromModel2RowTable(m)];
+            set(obj.app_.UITableModels,'Data',newData)
+            function s = fromModel2RowTable(model)
+                s.Type                  = model.Type1;
+                s.Data                  = class(model.DataTrain);
+                s.Name                  = model.Name;
+                if model.Type1 == "classreg.learning.classif"
+                    s.Accuracy_Training = sum(categorical(predict(model.Mdl, model.DataTrain)) == categorical(model.DataTrain.(model.VariableToExplain)))/size(model.DataTrain.(model.VariableToExplain),1);
+                    s.Accuracy_Test     = sum(categorical(predict(model.Mdl, model.DataTest)) == categorical(model.DataTest.(model.VariableToExplain)))/size(model.DataTest.(model.VariableToExplain),1);
+                elseif model.Type1 == "classreg.learning.regr"
+                    s.Accuracy_Training = sum(predict(model.Mdl, model.DataTrain) == model.DataTrain.(model.VariableToExplain))/size(model.DataTrain.(model.VariableToExplain),1);
+                    s.Accuracy_Test     = sum(predict(model.Mdl, model.DataTest) == model.DataTest.(model.VariableToExplain))/size(model.DataTest.(model.VariableToExplain),1);
+                end
+            end
+                
         end
         function set.Pointer(obj, pointer)
             obj.app_.UIFigure.Pointer = pointer;
             drawnow
         end
+        function set.hUITableModels(obj, t)
+            assert(isa(t, "table"))
+            assert(all(arrayfun(@(x) isMatchingClassTable(x), t.Properties.VariableNames)))
+            function bool = isMatchingClassTable(columnName)
+                bool = obj.hUITableModelsClass(columnName) == class(t.columnName);
+            end
+        end
+        
     end
     
     %% PRIVATE
-    methods (Access = {?Callbacks})
+    methods (Access = {?mvc.Callbacks})
         
         function iscompatible = isCompatible(obj)
             iscompatible.PDP                 = true;

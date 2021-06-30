@@ -15,7 +15,7 @@ classdef Callbacks
     methods
         function obj = Callbacks(options)
             arguments
-                options.view   {mustBeA(options.view, "View")}         
+                options.view   {mustBeA(options.view, "mvc.View")}         
             end
             obj.view_ = options.view;
             attachCallbacks(obj)
@@ -54,9 +54,12 @@ classdef Callbacks
     %% MENU BUTTONS
     methods (Access = private)
         function hMachineLearningMenuMenuSelectedFcn(obj, evt, src) %#ok<*INUSD>
-            s = obj.getfile();
+            [s, name] = obj.getfile();
             if ~isempty(s)
-                m = Model("dataTrain", s.dataTrain, "dataTest", s.dataTest, "Mdl", s.model); %#ok<CPROPLC>
+                m = mvc.Model("dataTrain", s.dataTrain, ...
+                              "dataTest", s.dataTest,   ...
+                              "Mdl", s.model,           ...
+                              "Name", name);
                 obj.view_.Model = m;
                 obj.runMachineLearning()
             end
@@ -74,7 +77,7 @@ classdef Callbacks
     end
     
     methods (Static)
-        function structOut = getfile()
+        function [structOut, name] = getfile()
             [file, path] = uigetfile('*.mat', "Please select a model, training and testing data (or a structure)", "MultiSelect", "on");
             if isequal(file,0)
                 structOut = struct.empty();
@@ -105,6 +108,7 @@ classdef Callbacks
                 modelIndex  = startsWith(classes, "classreg.learning.regr") | startsWith(classes, "classreg.learning.classif");
                     assert(all(dataIndex | modelIndex), "You must have 2 datasets & 1 regression or classification model")
             end
+            name = string(file);
         end
     end
     

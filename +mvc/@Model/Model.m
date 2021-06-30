@@ -8,8 +8,9 @@ classdef Model < handle
     properties (Dependent)
         DataTrain           (:,:) {mustBeA(DataTrain, ["table", "double"])}
         DataTest            (:,:) {mustBeA(DataTest,  ["table", "double"])}
-        Mdl                 (1,1)
+        Mdl                 (1,1) {mustBeAModel}
         VariableToExplain   (1,1) string {mustBeNonempty}
+        Name                (1,1) string {mustBeNonempty}
     end
     
     properties (Dependent)
@@ -24,19 +25,22 @@ classdef Model < handle
         datatrain_
         mdl_
         variableToExplain_
+        name_
     end
     
     %% CONSTRUCTOR
     methods
         function obj = Model(options)
             arguments
-                options.dataTrain           {mustBeA(options.dataTrain, ["table", "double"])}
-                options.dataTest            {mustBeA(options.dataTest,  ["table", "double"])}
-                options.mdl
+                options.dataTrain          
+                options.dataTest            
+                options.mdl                 
+                options.name                
             end
-            obj.mdl_                = options.mdl;
-            obj.datatrain_          = options.dataTrain;
-            obj.datatest_           = options.dataTest;   
+            obj.mdl_        = options.mdl;
+            obj.datatrain_  = options.dataTrain;
+            obj.datatest_   = options.dataTest;   
+            obj.name_       = options.name;
             if obj.Type1 == "classreg.learning.classif"
                 obj.variableToExplain_  = obj.mdl_.ResponseName;
                 obj.datatrain_.(obj.variableToExplain_) = categorical(obj.datatrain_.(obj.variableToExplain_));
@@ -44,7 +48,7 @@ classdef Model < handle
                 obj.variableToExplain_  = setdiff(obj.datatrain_.Properties.VariableNames, string(obj.mdl_.ExpandedPredictorNames));
             end
 
-        end
+        end    
     end
     
     %% ACCESSORS
@@ -52,6 +56,9 @@ classdef Model < handle
         function mdl = get.Mdl(obj)
             mdl = obj.mdl_;
         end
+        function name = get.Name(obj)
+            name = obj.name_;
+        end        
         function datatrain = get.DataTrain(obj)
             datatrain = obj.datatrain_;
         end
@@ -84,7 +91,7 @@ classdef Model < handle
     
     %% PUBLIC METHODS
     %% MODELS
-    methods (Access = {?View})
+    methods (Access = {?mvc.View})
         function [pd,x,y] = modelPDP2D(obj, predictor1, predictor2, ptX, ptY)
             if obj.Type1 == enumExplainerModels.classif
                 [pd,x,y] = partialDependence(obj.mdl_,{predictor1,predictor2}, obj.mdl_.ClassNames(1), 'QueryPoints',[ptX ptY]); 
@@ -125,6 +132,14 @@ classdef Model < handle
         function [ytickidx, ylabels, valEta] = localEffectsGAM(mdl, x, varargin)
             [ytickidx, ylabels, valEta] = localEffectsOverloaded(mdl, x, varargin{:});
         end
+        function mustBeAModel(mdl)
+            if ~any(ismember(string(superclasses(mdl)), "classreg.learning.Predictor")) && ...
+                ~any(ismember(string(superclasses(mdl)), "classreg.learning.Predictor"))
+                eidType = 'mustBeAModel:notClassifOrRegression';
+                msgType = 'Value assigned to Model property is not classif.learning or reg.learning.';
+                throwAsCaller(MException(eidType,msgType))
+            end
+        end            
     end
     
 end
