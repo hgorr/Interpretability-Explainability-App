@@ -115,19 +115,21 @@ classdef View < handle
         end  
         
         % Update Data
-        function updateCurrentData(obj)  
-            if matches(obj.hSwitch.Value, obj.hSwitchLabel(1), "IgnoreCase", true)
-                obj.currentData_        = obj.model_.DataTrain;
-                obj.currentDataType_    = "Training";
-            elseif matches(obj.hSwitch.Value, obj.hSwitchLabel(2), "IgnoreCase", true)
-                obj.currentData_        = obj.model_.DataTest;
-                obj.currentDataType_    = "Testing"; 
+        function updateCurrentData(obj)
+            if isa(obj.model_, "mvc.Model.MachineLearningModel")
+                if matches(obj.hSwitch.Value, obj.hSwitchLabel(1), "IgnoreCase", true)
+                    obj.currentData_        = obj.model_.DataTrain;
+                    obj.currentDataType_    = "Training";
+                elseif matches(obj.hSwitch.Value, obj.hSwitchLabel(2), "IgnoreCase", true)
+                    obj.currentData_        = obj.model_.DataTest;
+                    obj.currentDataType_    = "Testing"; 
+                end
+                obj.initializeDataApp()
+                removeStyle(obj.hDataTableLocal)
+                cla(obj.app_.LIMEAxes)
+                cla(obj.app_.ShapleyAxes)
+                cla(obj.app_.GAMAxes)
             end
-            obj.initializeDataApp()
-            removeStyle(obj.hDataTableLocal)
-            cla(obj.app_.LIMEAxes)
-            cla(obj.app_.ShapleyAxes)
-            cla(obj.app_.GAMAxes)
         end
         
         % Update Table local
@@ -238,24 +240,30 @@ classdef View < handle
     %% MUTATORS
     methods 
         function set.Model(obj, m)
-            obj.model_                              = m;
-            obj.iscompatible_                       = obj.isCompatible();
-            obj.app_.VariabletopredictLabel.Text    = obj.hVariableToPredictLabel + " " + m.VariableToExplain;
-            s                                       = fromModel2RowTable(m);
-            set(obj.app_.UITableModels, 'Data', struct2table(orderfields(s, obj.app_.UITableModels.ColumnName)))
-            function s = fromModel2RowTable(model)
-                s.Type                  = model.Type1;
-                s.Data                  = class(model.DataTrain);
-                s.Name                  = model.Name;
-                if model.Type1 == "classreg.learning.classif"
-                    s.Accuracy_Training = sum(categorical(predict(model.Mdl, model.DataTrain)) == categorical(model.DataTrain.(model.VariableToExplain)))/size(model.DataTrain.(model.VariableToExplain),1);
-                    s.Accuracy_Test     = sum(categorical(predict(model.Mdl, model.DataTest)) == categorical(model.DataTest.(model.VariableToExplain)))/size(model.DataTest.(model.VariableToExplain),1);
-                elseif model.Type1 == "classreg.learning.regr"
-                    s.Accuracy_Training = sum(predict(model.Mdl, model.DataTrain) == model.DataTrain.(model.VariableToExplain))/size(model.DataTrain.(model.VariableToExplain),1);
-                    s.Accuracy_Test     = sum(predict(model.Mdl, model.DataTest) == model.DataTest.(model.VariableToExplain))/size(model.DataTest.(model.VariableToExplain),1);
-                end
-            end
+            obj.model_ = m;
+            if isa(m, "mvc.Model.MachineLearningModel")
+                obj.iscompatible_                       = obj.isCompatible();
+                obj.app_.VariabletopredictLabel.Text    = obj.hVariableToPredictLabel + " " + m.VariableToExplain;
+                s                                       = obj.fromModel2RowTable(m);
+                set(obj.app_.UITableModels, 'Data', struct2table(orderfields(s, obj.app_.UITableModels.ColumnName)))
+            elseif isa(m, "mvc.Model.DeepLearningModel")
                 
+            end
+
+                    
+        end
+            
+        function s = fromModel2RowTable(~, model)
+            s.Type                  = model.Type1;
+            s.Data                  = class(model.DataTrain);
+            s.Name                  = model.Name;
+            if model.Type1 == "classreg.learning.classif"
+                s.Accuracy_Training = sum(categorical(predict(model.Mdl, model.DataTrain)) == categorical(model.DataTrain.(model.VariableToExplain)))/size(model.DataTrain.(model.VariableToExplain),1);
+                s.Accuracy_Test     = sum(categorical(predict(model.Mdl, model.DataTest)) == categorical(model.DataTest.(model.VariableToExplain)))/size(model.DataTest.(model.VariableToExplain),1);
+            elseif model.Type1 == "classreg.learning.regr"
+                s.Accuracy_Training = sqrt(sum(((predict(model.Mdl, model.DataTrain) - model.DataTrain.(model.VariableToExplain)).^2))/size(model.DataTrain.(model.VariableToExplain),1)) / mean(model.DataTrain.(model.VariableToExplain));
+                s.Accuracy_Test     = sqrt(sum(((predict(model.Mdl, model.DataTest) - model.DataTest.(model.VariableToExplain)).^2))/size(model.DataTest.(model.VariableToExplain),1)) / mean(model.DataTest.(model.VariableToExplain));
+            end
         end
         function set.Pointer(obj, pointer)
             obj.app_.UIFigure.Pointer = pointer;

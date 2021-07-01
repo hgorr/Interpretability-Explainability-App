@@ -61,38 +61,47 @@ classdef Callbacks
     methods (Access = private)
         function hMachineLearningMenuMenuSelectedFcn(obj, evt, src) %#ok<*INUSD>
             [s, name]   = obj.getfile();
+            s.name      = name;
+            obj.buildStructModel(s, mvc.Model.MachineLearningModel());
             if ~isempty(s)
-                s.name  = name;
-                s       = obj.buildStructModel(s, mvc.Model.MachineLearningModel());
-                m       = mvc.Model.MachineLearningModel({"dataTrain",  s.dataTrain, ...
-                                                          "dataTest",   s.dataTest,  ...
-                                                          "Mdl",        s.model, ...
-                                                          "Name",       s.name});
-                obj.view_.Model = m;                
                 obj.runMachineLearning()
             end
         end
         function hDeepLearningMenuMenuSelectedFcn(obj, evt, src)
-            [s, name]   = obj.getfile();
+            [s, name] = obj.getfile();
             if ~isempty(s)
-                s.name  = name;
-                s       = obj.buildStructModel(s, mvc.Model.DeepLearningModel());
-                m       = mvc.Model.DeepLearningModel({"dataTrain",     s.dataTrain, ...
-                                                       "dataTest",   s.dataTest,  ...
-                                                       "Mdl",        s.model, ...
-                                                       "Name",       s.name});
-                obj.view_.Model = m;                
-                %obj.runDeepLearning()
-            end          
+                classes                 = string(struct2cell(structfun(@class, s, "un", 0)));
+                modelIndex              = contains(classes, mvc.Model.DeepLearningModel.LISTMODELS);
+                dataIndex               = ismember(classes, mvc.Model.DeepLearningModel.LISTDATA);
+                obj.Callbacks_asserts(dataIndex, "Name", "Import:two_datasets")
+                obj.Callbacks_asserts(dataIndex, "Name", "Import:same_classes")
+                fnames                  = string(fieldnames(s));
+                structModel.dataTrain   = s.dataTrain;
+                structModel.dataTest    = s.dataTest;
+                structModel.model       = s.(fnames(modelIndex));                   
+                m = mvc.Model.MachineLearningModel({"dataTrain", structModel.dataTrain, ...
+                              "dataTest",   structModel.dataTest,   ...
+                              "Mdl",        structModel.model,      ...
+                              "Name",       name});
+                obj.view_.Model = m;
+                obj.runMachineLearning()
+            end            
         end
-        function s = buildStructModel(obj, s, className)
+        function buildStructModel(obj, s, className)
             classes                 = string(struct2cell(structfun(@class, s, "un", 0)));
             modelIndex              = contains(classes, className.LISTMODELS);
             dataIndex               = ismember(classes, className.LISTDATA);
             obj.Callbacks_asserts(dataIndex, "Name", "Import:two_datasets")
             obj.Callbacks_asserts(dataIndex, "Name", "Import:same_classes")
             fnames                  = string(fieldnames(s));
-            s.model                 = s.(fnames(modelIndex));
+            structModel.dataTrain   = s.dataTrain;
+            structModel.dataTest    = s.dataTest;
+            structModel.model       = s.(fnames(modelIndex));
+            m                       = className({"dataTrain",  structModel.dataTrain, ...
+                                                                      "dataTest",   structModel.dataTest,  ...
+                                                                      "Mdl",        structModel.model,     ...
+                                                                      "Name",       name});
+            obj.view_.Model = m;
         end
     end
     

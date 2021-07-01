@@ -1,92 +1,50 @@
-classdef Model < handle
+classdef MachineLearningModel < mvc.Model.Model
     
     properties (Constant)
-        INPUT  string = ["DataTrain", "DataTest", "Mdl", "VariableToExplain"]
-        OUTPUT string = []
+        LISTMODELS  = "classreg.learning"
+        LISTDATA    = ["table", "double"]
     end
     
     properties (Dependent)
-        DataTrain           (:,:) {mustBeA(DataTrain, ["table", "double"])}
-        DataTest            (:,:) {mustBeA(DataTest,  ["table", "double"])}
-        Mdl                 (1,1)
-        VariableToExplain   (1,1) string {mustBeNonempty}
-        Name                (1,1) string {mustBeNonempty}
-    end
-    
-    properties (Dependent)
-        InputData
-        OutputData
-        Type1       (1,1) string {mustBeMember(Type1, ["classreg.learning.classif", "classreg.learning.regr"])}
+        Type1 
         Type2 
-    end
-    
-    properties (Access = private)
-        datatest_
-        datatrain_
-        mdl_
-        variableToExplain_
-        name_
     end
     
     %% CONSTRUCTOR
     methods
-        function obj = Model(options)
-            arguments
-                options.dataTrain           {mustBeA(options.dataTrain, ["table", "double"])}
-                options.dataTest            {mustBeA(options.dataTest,  ["table", "double"])}
-                options.mdl                 
-                options.name                {mustBeText}
-            end
-            obj.mdl_        = options.mdl;
-            obj.datatrain_  = options.dataTrain;
-            obj.datatest_   = options.dataTest;   
-            obj.name_       = options.name;
+        function obj = MachineLearningModel(options)
+            obj = obj@mvc.Model.Model(options{:});
             if obj.Type1 == "classreg.learning.classif"
                 obj.variableToExplain_  = obj.mdl_.ResponseName;
                 obj.datatrain_.(obj.variableToExplain_) = categorical(obj.datatrain_.(obj.variableToExplain_));
             elseif obj.Type1 == "classreg.learning.regr"
                 obj.variableToExplain_  = setdiff(obj.datatrain_.Properties.VariableNames, string(obj.mdl_.ExpandedPredictorNames));
             end
-
-        end
+        end    
     end
     
     %% ACCESSORS
     methods
-        function mdl = get.Mdl(obj)
-            mdl = obj.mdl_;
-        end
-        function name = get.Name(obj)
-            name = obj.name_;
-        end        
-        function datatrain = get.DataTrain(obj)
-            datatrain = obj.datatrain_;
-        end
-        function datatest = get.DataTest(obj)
-            datatest = obj.datatest_;
-        end
-        function v = get.VariableToExplain(obj)
-            v = obj.variableToExplain_;
-        end        
         function type = get.Type1(obj)
-            type = string(metaclass(obj.Mdl).ContainingPackage.Name);
+            type = extract(string(class(obj.mdl_)), lettersPattern + "." + lettersPattern + "." + lettersPattern);
         end
     end
-    
-    %% MUTATORS
-    methods
-        function set.DataTrain(obj, datatrain)
-            obj.datatrain_ = datatrain;
+        
+    methods (Static, Access = protected)
+        function mustBeAData(data)
+            if ~ismember(class(data), mvc.Model.MachineLearningModel.LISTDATA) && ~isstring(data) 
+                eidType = 'mustBeAData:notAnAcceptedData';
+                msgType = 'Value assigned to DataTrain/DataTest property is not an accepted data in the app.';
+                throwAsCaller(MException(eidType,msgType))
+            end
         end
-        function set.DataTest(obj, datatest)
-            obj.datatest_ = datatest;
+        function mustBeAnIAModel(mdl)
+            if ~contains(class(mdl), mvc.Model.MachineLearningModel.LISTMODELS) && ~isstring(mdl)
+                eidType = 'mustBeAModel:notClassifOrRegression';
+                msgType = 'Value assigned to Model property is not classif.learning or reg.learning.';
+                throwAsCaller(MException(eidType,msgType))
+            end
         end
-        function set.Mdl(obj, mdl)
-            obj.mdl_ = mdl;
-        end
-        function set.VariableToExplain(obj, v)
-            obj.variableToExplain_ = v;
-        end        
     end
     
     %% PUBLIC METHODS
@@ -131,14 +89,6 @@ classdef Model < handle
     methods (Static)
         function [ytickidx, ylabels, valEta] = localEffectsGAM(mdl, x, varargin)
             [ytickidx, ylabels, valEta] = localEffectsOverloaded(mdl, x, varargin{:});
-        end
-        function mustBeAModel(m)
-            if ~any(ismember(string(superclasses(options.mdl)), "classreg.learning.Predictor"))
-                eidType = 'mustBeAModel:notClassifOrRegression';
-                msgType = 'Value assigned to Data property is not uint8 or uint16 data.';
-                throwAsCaller(MException(eidType,msgType))
-            end
-            any(ismember(string(superclasses(options.mdl)), "classreg.learning.Predictor"))
         end
     end
     

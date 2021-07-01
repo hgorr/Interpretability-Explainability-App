@@ -1,31 +1,36 @@
 classdef Model < handle
     
     properties (Constant)
-        INPUT  string = ["DataTrain", "DataTest", "Mdl", "VariableToExplain"]
-        OUTPUT string = []
+        INPUT       string = ["DataTrain", "DataTest", "Mdl", "VariableToExplain"]
+        OUTPUT      string = []
+    end
+    
+    properties (Constant)
+        LISTMODELS  string = ["classreg.learning", "SeriesNetwork"]
+        LISTDATA    string = ["table", "double", "ImageDatastore"]
     end
     
     properties (Dependent)
-        DataTrain           (:,:) {mustBeA(DataTrain, ["table", "double"])}
-        DataTest            (:,:) {mustBeA(DataTest,  ["table", "double"])}
-        Mdl                 (1,1) {mustBeAModel}
-        VariableToExplain   (1,1) string {mustBeNonempty}
-        Name                (1,1) string {mustBeNonempty}
+        DataTrain           
+        DataTest            
+        Mdl                 
+        VariableToExplain   
+        Name                
     end
     
     properties (Dependent)
         InputData
         OutputData
-        Type1       (1,1) string {mustBeMember(Type1, ["classreg.learning.classif", "classreg.learning.regr"])}
+        Type1       (1,1) string {mustBeMember(Type1, ["classreg.learning.classif", "classreg.learning.regr", "SeriesNetwork"])}
         Type2 
     end
     
     properties (Access = private)
-        datatest_
-        datatrain_
-        mdl_
-        variableToExplain_
-        name_
+        datatrain_          (:,:) {mustBeAData}
+        datatest_           (:,:) {mustBeAData}
+        mdl_                (1,1) {mustBeAMachineLearningModel} 
+        variableToExplain_  (1,1) string {mustBeNonempty}
+        name_               (1,1) string {mustBeNonempty}
     end
     
     %% CONSTRUCTOR
@@ -132,14 +137,21 @@ classdef Model < handle
         function [ytickidx, ylabels, valEta] = localEffectsGAM(mdl, x, varargin)
             [ytickidx, ylabels, valEta] = localEffectsOverloaded(mdl, x, varargin{:});
         end
-        function mustBeAModel(mdl)
-            if ~any(ismember(string(superclasses(mdl)), "classreg.learning.Predictor")) && ...
-                ~any(ismember(string(superclasses(mdl)), "classreg.learning.Predictor"))
-                eidType = 'mustBeAModel:notClassifOrRegression';
-                msgType = 'Value assigned to Model property is not classif.learning or reg.learning.';
-                throwAsCaller(MException(eidType,msgType))
-            end
-        end            
     end
     
+end
+
+function mustBeAMachineLearningModel(mdl)
+if ~contains(mdl, mvc.Model.LISTMODELS) 
+    eidType = 'mustBeAModel:notClassifOrRegression';
+    msgType = 'Value assigned to Model property is not classif.learning or reg.learning.';
+    throwAsCaller(MException(eidType,msgType))
+end
+end
+function mustBeAData(data)
+if ~ismember(class(data), mvc.Model.LISTDATA)
+    eidType = 'mustBeAData:notAnAcceptedData';
+    msgType = 'Value assigned to DataTrain/DataTest property is not an accepted data in the app.';
+    throwAsCaller(MException(eidType,msgType))
+end
 end
