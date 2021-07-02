@@ -6,9 +6,9 @@ It allows end users to import machine learning model + data (training & test) to
   
 **Why**:  
 A machine/deep leaning model can be complex and then be difficult to understand its behavior under the hood, thus being able to:
-- Understand the impact (positive or negative) of each predictor of the model
-- Understand the reason why the model has a good or bad prediction and debug it
-- Explain the model and share it with other people who will be more likely to use it
+* Understand the impact (positive or negative) of each predictor of the model
+* Understand the reason why the model has a good or bad prediction and debug it
+* Explain the model and share it with other people who will be more likely to use it
   
 
 **How**:  
