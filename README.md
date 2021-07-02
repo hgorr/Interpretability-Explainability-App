@@ -10,7 +10,9 @@ A machine/deep leaning model can be complex and then be difficult to understand 
 - Understand the reason why the model has a good or bad prediction and debug it
 - Explain the model and share it with other people who will be more likely to use it
 
-**How**:
+
+**How**:  
+You just need to format your input data and then interactively visualize the explainability results.
 - Requirements:  
   - You need to save your machine learning model in a .mat file, including the data training and data test. 
   - You must rename the data: dataTraining and dataTest.
