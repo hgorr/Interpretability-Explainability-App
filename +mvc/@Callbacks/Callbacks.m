@@ -109,8 +109,10 @@ classdef Callbacks
             if isequal(file,0)
                 s       = struct.empty();
             else
-                s       = open(fullfile(path, file));
+                
+                s       = load(fullfile(path, file));
                 name    = string(file);
+                
             end
             
         end

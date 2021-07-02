@@ -88,7 +88,7 @@ classdef View < handle
         function obj = View(options)
             arguments
                 options.app   (1,1) 
-                options.model (0,1) {mustBeA(options.model,  "mvc.Model")} = mvc.Model.empty()      
+                options.model (0,1) {mustBeA(options.model,  "mvc.Model.Model")} = mvc.Model.MachineLearningModel.empty()      
             end           
             obj.app_   = options.app;
             obj.initializeListeners()

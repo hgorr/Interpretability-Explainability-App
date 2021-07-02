@@ -1,6 +1,6 @@
 <deployment-project plugin="plugin.webdeploy" plugin-version="1.0">
   <configuration file="C:\Users\pharouim\OneDrive - MathWorks\ByTopic\Machine Learning\Explainability\ExplainerApp\app1.prj" location="C:\Users\pharouim\OneDrive - MathWorks\ByTopic\Machine Learning\Explainability\ExplainerApp" name="app1" target="target.webdeploy" target-name="Web App Compiler">
-    <param.appname>app1</param.appname>
+    <param.appname>ModelExplainer</param.appname>
     <param.intermediate>${PROJECT_ROOT}\app1</param.intermediate>
     <param.files.only>${PROJECT_ROOT}\app1</param.files.only>
     <param.output />
@@ -22,11 +22,14 @@
     <fileset.web.main>
       <file>${PROJECT_ROOT}\ModelExplainer_WebApp.mlapp</file>
     </fileset.web.main>
-    <fileset.resources />
+    <fileset.resources>
+      <file>${PROJECT_ROOT}\+mvc</file>
+      <file>${PROJECT_ROOT}\helperFunctions</file>
+    </fileset.resources>
     <fileset.depfun />
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\app1" name="app1.ctf" optional="false">C:\Users\pharouim\OneDrive - MathWorks\ByTopic\Machine Learning\Explainability\ExplainerApp\app1\app1.ctf</file>
+      <file location="${PROJECT_ROOT}\app1" name="ModelExplainer.ctf" optional="false">C:\Users\pharouim\OneDrive - MathWorks\ByTopic\Machine Learning\Explainability\ExplainerApp\app1\ModelExplainer.ctf</file>
     </build-deliverables>
     <workflow />
     <matlab>
