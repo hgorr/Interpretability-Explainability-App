@@ -1,6 +1,6 @@
 # interpretabilityExplainabilityApp
 
-#What:
+**What**:
 A MATLAB application built with App Designer and deployed with the Web App Server.
 It allows end users to import machine learning model + data (training & test) to run interpretability/explainability functions on the model.
 
