@@ -1,8 +1,8 @@
 # interpretabilityExplainabilityApp
 
 **What**:  
-A MATLAB application built with *App Designer* and deployed with the *Web App Server*.
-It allows end users to import machine learning model + data (training & test) to run [*interpretability/explainability*](https://se.mathworks.com/products/matlab/app-designer.html) functions on the model.
+A MATLAB application built with [App Designer](https://se.mathworks.com/products/matlab/app-designer.html) and deployed with the [Web App Server](https://se.mathworks.com/products/matlab-web-app-server.html).
+It allows end users to import machine learning model + data (training & test) to run [interpretability/explainability](https://se.mathworks.com/discovery/interpretability.html) functions on the model.
   
 **Why**:  
 A machine/deep leaning model can be complex and then be difficult to understand its behavior under the hood, thus being able to:
