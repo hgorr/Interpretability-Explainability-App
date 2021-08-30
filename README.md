@@ -1,4 +1,4 @@
-# interpretabilityExplainabilityApp
+# Interpretability-Explainability-App
 
 **What**:  
 A MATLAB application built with [App Designer](https://se.mathworks.com/products/matlab/app-designer.html) and deployed with the [Web App Server](https://se.mathworks.com/products/matlab-web-app-server.html).
